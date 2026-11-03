@@ -207,6 +207,10 @@ public class HostelData {
         return fileHandler.writeReport(hostelCode, reportText);
     }
 
+    public String exportInspectionList(String hostelCode, String text) {
+        return fileHandler.writeReport("inspection", hostelCode, text);
+    }
+
     public Student getStudent(String rollNo) {
         return students.get(rollNo);
     }

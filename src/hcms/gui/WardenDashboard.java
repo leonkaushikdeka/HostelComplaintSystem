@@ -21,7 +21,7 @@ public class WardenDashboard extends JFrame implements ActionListener {
 
     private JMenuItem miSave, miLogout, miExit;
     private JMenuItem miAll, miPending, miInProgress, miEscalated, miResolved, miSearchId, miSearchRoll;
-    private JMenuItem miRoomMap, miStudentList, miStatistics, miExport, miAbout;
+    private JMenuItem miRoomMap, miRiskRadar, miStudentList, miStatistics, miExport, miAbout;
     private JTable tblComplaints;
     private DefaultTableModel model;
     private JButton btnInProgress;
@@ -51,6 +51,7 @@ public class WardenDashboard extends JFrame implements ActionListener {
         miSearchRoll = addItem(mnuComplaints, "Search by Roll No.");
         JMenu mnuHostel = new JMenu("Hostel");
         miRoomMap = addItem(mnuHostel, "Room Map");
+        miRiskRadar = addItem(mnuHostel, "Risk Radar");
         miStudentList = addItem(mnuHostel, "Student List");
         JMenu mnuReports = new JMenu("Reports");
         miStatistics = addItem(mnuReports, "Statistics");
@@ -333,6 +334,8 @@ public class WardenDashboard extends JFrame implements ActionListener {
             searchByRoll();
         } else if (source == miRoomMap) {
             new RoomMapFrame(data, warden.getHostel());
+        } else if (source == miRiskRadar) {
+            new RiskRadarFrame(data, warden.getHostel());
         } else if (source == miStudentList) {
             showStudentList();
         } else if (source == miStatistics) {

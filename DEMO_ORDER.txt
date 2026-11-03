@@ -1,5 +1,5 @@
 HOSTEL COMPLAINT MANAGEMENT SYSTEM
-5 MINUTE DEMO ORDER
+6 MINUTE DEMO ORDER
 
 BEFORE THE VIVA
     1. Run compile.bat once. It should say "Compilation successful."
@@ -57,21 +57,38 @@ LOGINS
       Floor > First, click 112: two occupants and complaint 1003.
       Window > Close.
 
-2:00  STUDENT LIST
+2:00  MAINTENANCE RISK RADAR (headline feature)
+      Hostel > Risk Radar. The console prints:
+          [RiskRadar] Boys Hostel A: 1 High, 1 Medium, 10 Low, 7 rooms for preventive check
+      The heatmap is a side view of the building: Second Floor on top, Ground Floor
+      at the bottom, 20 rooms per floor. Yellow to red as the score goes up.
+      Room 112 is selected first, High 68: Safety complaint 1003 open 5 days (+15),
+      High priority (+15), Safety category (+20), escalated (+10), 2 students (+8).
+      Room 018 is Medium 46 with a Plumbing problem, so 017, 019 and 118 (left,
+      right and directly above) get a blue CHECK border for a preventive check
+      although nobody there has complained.
+      Click 017: "Next to room 018: open Plumbing problem, shares pipes".
+      How Scores Work: every rule and weight, the same for all rooms.
+      Save Inspection List: data\inspection_BHA_<date>.txt. Close.
+      Explain: fixed rules, no trained model and no randomness, so every number
+      can be checked by hand. Comparable for the ranking, RoomRisk[][] 2D array,
+      inner class HeatmapPanel with paintComponent(), MouseAdapter for clicks.
+
+2:45  STUDENT LIST
       Hostel > Student List. Mobile numbers masked with StringBuffer.replace(),
       for example 90000XXX01.
 
-2:10  STATISTICS
+2:55  STATISTICS
       Reports > Statistics. Totals with loops, switch on status, (double) cast for
       the resolution rate, (int) narrowing for the rounded rate, average days,
       most reported category, ternary label, 2D category x status array.
 
-2:30  EXPORT REPORT
+3:15  EXPORT REPORT
       Reports > Export Report. Open data\report_BHA_<date>.txt in Notepad.
       Help > About shows both developers and the system properties.
       File > Logout.
 
-2:50  BRUTE FORCE LOCKOUT
+3:35  BRUTE FORCE LOCKOUT
       Student selected. Type IT25X9001 with any password:
           "Roll No. must start with IT25B. Attempts left: 2"
           (InvalidRollNumberException, checked with startsWith, substring,
@@ -82,23 +99,23 @@ LOGINS
       lines, then explain FileNotFoundException on the first run and the finally
       block that closes the file.
 
-3:30  STUDENT LOGIN (Swing)
+4:15  STUDENT LOGIN (Swing)
       IT25B9001 / asu@9001. Profile panel, own complaints only, clock ticking in
       the status bar (ClockThread).
 
-3:45  DUPLICATE COMPLAINT
+4:30  DUPLICATE COMPLAINT
       Complaint > New Complaint. Category Plumbing, description
       "Tap in the washroom is still leaking badly", Submit.
           "You already have an open Plumbing complaint (ID 1001, In Progress)."
       (DuplicateComplaintException)
 
-4:00  VALIDATION
+4:45  VALIDATION
       Category Electrical, description "light broken", Submit:
           "Description must have at least 5 words. You wrote 2." (EmptyFieldException)
       Room No. 305, Submit: room does not exist (InvalidRoomException).
       Room No. 1a8, Submit: Room No. must be a number (NumberFormatException).
 
-4:20  REGISTER A COMPLAINT
+5:05  REGISTER A COMPLAINT
       Room No. 018, Category Electrical, leave Priority unselected,
       tick "Allow entry to room when I am absent",
       description "Tube light in my room flickers and goes off at night".
@@ -106,9 +123,9 @@ LOGINS
       which came from the constructor without priority chained with this(...).
       My Complaints table now has 2 rows.
 
-4:40  SAVE AND RELOAD
+5:25  SAVE AND RELOAD
       File > Exit (saves the file). Run run.bat again.
       Banner now shows 11 complaints and next complaint ID 1012, because the
       counter is set to the highest ID plus 1 after loading.
 
-5:00  END
+5:45  END

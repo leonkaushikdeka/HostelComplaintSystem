@@ -98,7 +98,11 @@ public class FileHandler {
     }
 
     public String writeReport(String hostelCode, String reportText) {
-        String fileName = FOLDER + File.separator + "report_" + hostelCode + "_"
+        return writeReport("report", hostelCode, reportText);
+    }
+
+    public String writeReport(String prefix, String hostelCode, String reportText) {
+        String fileName = FOLDER + File.separator + prefix + "_" + hostelCode + "_"
                 + LocalDate.now().format(Complaint.DATE_FORMAT) + ".txt";
         FileWriter writer = null;
         try {

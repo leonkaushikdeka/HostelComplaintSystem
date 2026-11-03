@@ -317,6 +317,72 @@ File handling
     File.mkdirs() creates the data folder on the first run
 
 
+MAINTENANCE RISK RADAR (HEADLINE FEATURE)
+=========================================
+
+What it does
+    -> data\RiskRadar.java : calculate()
+       Scores all 60 rooms of a hostel from 0 to 100 with fixed rules, then marks
+       the rooms next to a risky room for a preventive check.
+    -> gui\RiskRadarFrame.java : floor heatmap, ranked list, "Why this score" panel
+    Opened from gui\WardenDashboard.java : Hostel > Risk Radar
+
+Why it is explainable
+    Every point is added through model\RoomRisk.java : addPoints(value, reason),
+    so each number on screen has a written reason next to it. The rules and
+    weights are public constants and are printed by RiskRadar.getRulesText()
+    (How Scores Work button). Same data in, same score out, no randomness.
+
+Four passes in calculate()
+    1. Complaint, history and floor points   -> addComplaintPoints(), addRepeatPoints(),
+                                                addSameProblemPoints(), addBusyFloorPoints()
+    2. Find risky rooms                      -> markIfRisky(), findSpreadCategory()
+    3. Neighbour points (left, right, above, below)
+                                             -> addNeighbourPoints(), getNeighbours()
+    4. People affected                       -> addOccupancyPoints()
+    Rooms are scored before neighbours are looked at, so one risky room cannot
+    make a chain of risky rooms across the floor.
+
+2D object array
+    -> data\RiskRadar.java : RoomRisk[][] rooms = new RoomRisk[3][20]  (floor x room)
+
+synchronized block
+    -> data\RiskRadar.java : addComplaintPoints()  synchronized (c) { ... }
+       EscalationThread cannot change a complaint's status or priority halfway
+       through scoring it (same lock as the synchronized getters in Complaint)
+
+Parallel arrays (same index as Complaint.CATEGORIES and Complaint.PRIORITIES)
+    -> data\RiskRadar.java : CATEGORY_POINTS, CATEGORY_REASONS, SHARED_PARTS, PRIORITY_POINTS
+
+Comparable interface and sorting
+    -> model\RoomRisk.java : implements Comparable<RoomRisk>, compareTo()  (highest score first)
+    -> data\RiskRadar.java : getRanking()  Collections.sort(list)
+
+Same interface, two classes (polymorphism through an interface)
+    -> model\RoomRisk.java : implements Reportable, generateSlip() gives the room explanation
+    -> model\Complaint.java : implements Reportable, generateSlip() gives the complaint slip
+
+Casts, char arithmetic, Math.min, ternary
+    -> data\RiskRadar.java : addComplaintPoints()  int days = (int) c.getDaysOpen();  (long to int)
+    -> data\RiskRadar.java : floorOf()  roomNo.charAt(0) - '0'
+    -> data\RiskRadar.java : Math.min(days * POINTS_PER_DAY, MAX_AGE_POINTS)  (caps)
+    -> data\RiskRadar.java : occupancyPoints(), dayText()  (ternary)
+    -> model\RoomRisk.java : getScore()  Math.min(points, MAX_SCORE)
+
+Method overloading
+    -> data\FileHandler.java : writeReport(hostelCode, text) and writeReport(prefix, hostelCode, text)
+    -> data\HostelData.java : exportInspectionList()  writes data\inspection_<hostelcode>_<date>.txt
+
+Inner class, custom painting and mouse events
+    -> gui\RiskRadarFrame.java : private class HeatmapPanel extends JPanel
+       paintComponent(Graphics) overridden, Graphics2D fillRect(), drawRect(), drawString(),
+       BasicStroke for the CHECK and selected borders
+    -> gui\RiskRadarFrame.java : colorFor()  colour worked out with int arithmetic from the score
+    -> gui\RiskRadarFrame.java : MouseAdapter (anonymous class) finds the clicked room
+    -> gui\RiskRadarFrame.java : getToolTipText(MouseEvent) overridden for hover text
+    -> gui\RiskRadarFrame.java : ListSelectionListener (anonymous class) on the ranked JTable
+
+
 SECURITY POINTS FOR THE VIVA (Cyber Security)
 =============================================
     Brute force protection      -> LockoutThread, 3 attempts then 30 second lock
@@ -326,3 +392,4 @@ SECURITY POINTS FOR THE VIVA (Cyber Security)
     Privacy                     -> anonymous complaints hide name and roll, roll search skips them
     Data minimisation           -> mobile numbers masked in the Warden's student list
     File injection guard        -> "|" and newlines removed from text before saving
+    Privacy in the Risk Radar   -> shows room occupants only, never who filed a complaint
