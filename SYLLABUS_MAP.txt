@@ -1,0 +1,328 @@
+HOSTEL COMPLAINT MANAGEMENT SYSTEM
+SYLLABUS MAP: Java Programming (PCC-01)
+B.Tech CSE (Honours) Cyber Security, 3rd Semester
+Department of IT, Assam Skill University, Mangaldoi
+Leon Kaushik Deka (IT25B0233) and Banasri Sarma (IT26L0103)
+
+All paths are under src\hcms\. Format: topic -> file : method or place.
+
+
+UNIT I: BASICS
+==============
+
+System properties (System.getProperty)
+    -> Main.java : printBanner()
+       java.version, java.vendor, os.name, os.arch, user.name
+    -> gui\AboutDialog.java : constructor (same properties shown in the GUI)
+
+Console output, startup banner with date, time and counts
+    -> Main.java : printBanner()  (LocalDateTime.now(), getStudentCount(), getComplaintCount())
+
+Data types used naturally
+    int      -> gui\StatisticsFrame.java : buildStatistics()  (total, pending, ratePercent)
+    long     -> model\Complaint.java : getDaysOpen(), getDaysToResolve()
+             -> threads\EscalationThread.java : CHECK_INTERVAL = 15000
+             -> gui\StatisticsFrame.java : buildStatistics()  (long totalDays)
+    double   -> gui\StatisticsFrame.java : buildStatistics()  (resolutionRate, averageDays)
+    char     -> model\Hostel.java : addOccupant()  (char floorDigit = roomNo.charAt(0))
+             -> model\Student.java : checkRollNumber()  (char ch)
+             -> gui\LoginFrame.java : setEchoChar('*')
+    boolean  -> model\Complaint.java : anonymous, allowEntry, isOpen()
+    String   -> everywhere
+
+Arithmetic and char arithmetic
+    -> model\Hostel.java : addOccupant()  (int floor = floorDigit - '0')
+    -> model\Hostel.java : checkRoom()  (number / 100, number % 100)
+
+Totals with loops
+    -> gui\StatisticsFrame.java : buildStatistics()  (for loop over complaints, total++)
+    -> model\Hostel.java : getBedsOccupied()  (nested for loop over the 2D array)
+
+Explicit (double) cast for a percentage
+    -> gui\StatisticsFrame.java : buildStatistics()
+       resolutionRate = (double) resolved / total * 100;
+
+Explicit narrowing cast
+    -> gui\StatisticsFrame.java : buildStatistics()
+       int ratePercent = (int) Math.round(resolutionRate);   (long to int)
+
+Implicit widening
+    -> gui\StatisticsFrame.java : buildStatistics()
+       averageDays = totalDays;   (long to double, no cast needed)
+    -> model\Complaint.java : escalate()
+       getDaysOpen() > ESCALATION_DAYS   (int widened to long in the comparison)
+
+Average days to resolve
+    -> gui\StatisticsFrame.java : buildStatistics()  (averageDays = totalDays; averageDays /= resolved;)
+
+Counts per category in an int array
+    -> gui\StatisticsFrame.java : buildStatistics()  (int[] categoryCount)
+
+Most reported category found with a loop
+    -> gui\StatisticsFrame.java : buildStatistics()  (maxIndex loop)
+
+switch on status (String switch)
+    -> gui\StatisticsFrame.java : buildStatistics()  (case "Pending", "In Progress", "Escalated", "Resolved")
+
+Ternary operator
+    -> gui\StatisticsFrame.java : buildStatistics()
+       performance = ratePercent >= GOOD_RATE ? "Good" : "Needs attention";
+    -> model\Complaint.java : generateSlip()  (anonymous ? "Yes ..." : "No")
+    -> gui\WardenDashboard.java : shownRoll(), shownName()
+
+Compound assignment operators
+    -> gui\StatisticsFrame.java : buildStatistics()  (+=, /=, categoryCount[row] += 1)
+    -> model\Hostel.java : getBedsOccupied()  (total += occupancy[f][r])
+
+if-else, loops (for, for-each, while)
+    -> gui\LoginFrame.java : login(), wrongLogin()
+    -> data\FileHandler.java : loadComplaints()  (while loop reading lines)
+    -> data\HostelData.java : search methods  (for and for-each)
+
+
+UNIT II: OBJECT ORIENTED PROGRAMMING
+====================================
+
+Abstract class and abstract method
+    -> model\Person.java : abstract class Person, abstract String getRole()
+
+Constructor and protected fields
+    -> model\Person.java : protected name, email, mobile; Person(name, email, mobile)
+
+Multilevel inheritance: Person > Staff > Warden
+    -> model\Staff.java : Staff(...) calls super(name, email, mobile)
+    -> model\Warden.java : Warden(...) calls super(staffId, name, email, mobile, "Warden")
+
+Method overriding at every level (showDetails)
+    -> model\Person.java : showDetails()
+    -> model\Staff.java : showDetails()   returns super.showDetails() + Staff ID, Designation
+    -> model\Warden.java : showDetails()  returns super.showDetails() + Hostel
+    -> model\Student.java : showDetails() returns super.showDetails() + Roll No., Hostel, Room No.
+    Seen in the GUI: Warden panel at the top of WardenDashboard shows all three levels.
+
+Hierarchical inheritance
+    -> model\Student.java : Student extends Person (Person has two child branches)
+
+Runtime polymorphism (dynamic method dispatch)
+    -> gui\LoginFrame.java : printLogin(Person person)
+       person.getRole() and person.showDetails() call the Student or Warden version at run time
+
+Encapsulation, private fields, public getters and setters
+    -> model\Student.java : private rollNo, hostelCode, roomNo, password; getters and setters
+    -> model\Complaint.java : all fields private, public getters
+
+Access control on purpose
+    private          -> model\Student.java fields, model\Complaint.java fields
+    protected        -> model\Person.java fields
+    public           -> getters in every model class
+    package-private  -> model\Warden.java : boolean canManage(String hostelCode)
+                        (no modifier, so only classes inside hcms.model can call it;
+                         it is called from model\Complaint.java : updateStatus())
+    Only a Warden can change status
+                     -> model\Complaint.java : updateStatus()
+                        checks "changedBy instanceof Warden", downcasts, then canManage()
+
+Interfaces and multiple inheritance through interfaces
+    -> model\Trackable.java : getStatus(), updateStatus()
+    -> model\Reportable.java : generateSlip()
+    -> model\Complaint.java : class Complaint implements Trackable, Reportable
+
+Constructor overloading and chaining with this(...)
+    -> model\Complaint.java : three constructors
+       1. without priority  -> this(..., "Medium", ...)
+       2. with priority     -> this(nextId(), ..., LocalDate.now(), "Pending", "-", null)
+       3. full constructor  (used when loading from file and for seed data)
+    Used in gui\ComplaintForm.java : submitComplaint()
+       no radio button selected -> constructor 1, otherwise constructor 2
+
+static variable, static methods
+    -> model\Complaint.java : static int counter = 1001, static int totalCreated
+       nextId(), setCounter(), getNextId(), getTotalCreated()
+    -> data\HostelData.java : loadComplaints()  sets counter to highest ID + 1 after loading
+    -> model\Student.java : static checkRollNumber()
+    -> model\Hostel.java : static roomNumber()
+
+Method overloading
+    -> data\HostelData.java : search(int id), search(String rollNo), search(String category, String status)
+
+final keyword
+    final static int  -> model\Complaint.java : ESCALATION_DAYS = 3
+    final arrays      -> model\Complaint.java : CATEGORIES, PRIORITIES, STATUSES
+    final method      -> model\Complaint.java : public final int getId()
+    final constants   -> model\Hostel.java : FLOORS, ROOMS_PER_FLOOR, BEDS_PER_ROOM
+    final local       -> threads\EscalationThread.java : run()  (final WardenDashboard dashboard)
+
+toString() overridden
+    -> model\Complaint.java : toString()
+    -> model\Student.java : toString()
+
+Aggregation (has-a)
+    -> model\Warden.java : private Hostel hostel
+
+Packages and import
+    -> hcms, hcms.model, hcms.exceptions, hcms.threads, hcms.data, hcms.gui
+
+
+UNIT III: EXCEPTIONS, ARRAYS, STRINGS, THREADS
+==============================================
+
+Custom checked exceptions (extend Exception)
+    -> exceptions\InvalidRollNumberException.java
+    -> exceptions\InvalidRoomException.java
+    -> exceptions\DuplicateComplaintException.java
+    -> exceptions\EmptyFieldException.java
+
+throw and throws
+    InvalidRollNumberException  -> model\Student.java : checkRollNumber() throws ...
+        length() != 9, startsWith("IT25B"), substring(5), charAt(i), Character.isDigit(ch)
+        caught in gui\LoginFrame.java : login() and gui\WardenDashboard.java : searchByRoll()
+    InvalidRoomException        -> model\Hostel.java : checkRoom() throws ...
+        caught in gui\ComplaintForm.java : submitComplaint()
+    DuplicateComplaintException -> data\HostelData.java : checkDuplicate() throws ...
+        same student, same category, still Pending, In Progress or Escalated
+        caught in gui\ComplaintForm.java : submitComplaint()
+    EmptyFieldException         -> gui\ComplaintForm.java : validateForm() throws ...
+        blank Room No., blank description, or fewer than 5 words
+
+Multiple catch blocks
+    -> gui\ComplaintForm.java : submitComplaint()  (four catch blocks)
+
+NumberFormatException (built in, unchecked)
+    -> gui\WardenDashboard.java : searchById()  (Integer.parseInt on typed ID)
+    -> gui\ComplaintForm.java : submitComplaint()  (room typed as "1a8", thrown by Integer.parseInt in Hostel.checkRoom())
+    -> data\FileHandler.java : parseLine()
+
+try-catch-finally with file streams
+    -> data\FileHandler.java : loadComplaints()  (finally closes BufferedReader)
+       FileNotFoundException caught separately from IOException (first run, no file yet)
+    -> data\FileHandler.java : saveComplaints()  (finally closes PrintWriter)
+    -> data\FileHandler.java : writeReport()  (finally closes FileWriter)
+
+Arrays
+    2D array          -> model\Hostel.java : int[][] occupancy = new int[3][20]  (floor x room)
+    2D array (stats)  -> gui\StatisticsFrame.java : int[][] categoryStatus  (category x status)
+    1D int array      -> gui\StatisticsFrame.java : int[] categoryCount
+    String arrays     -> model\Complaint.java : CATEGORIES, PRIORITIES, STATUSES
+    object arrays     -> data\HostelData.java : Hostel[] hostels, Warden[] wardens
+                      -> gui\RoomMapFrame.java : Button[] btnRooms
+    array split       -> data\FileHandler.java : parseLine()  String[] parts
+
+String methods
+    trim()               -> gui\LoginFrame.java : login(); gui\ComplaintForm.java : submitComplaint()
+    toUpperCase()        -> gui\LoginFrame.java : login(); gui\WardenDashboard.java : searchByRoll()
+    toLowerCase()        -> model\Student.java : constructor (email = roll in lower case + @asu.ac.in)
+    equalsIgnoreCase()   -> data\HostelData.java : getWarden()  (Warden ID login), search(String rollNo)
+    split("\\|")         -> data\FileHandler.java : parseLine()
+    word count by split  -> gui\ComplaintForm.java : countWords()  (split("\\s+"))
+    replace(char, char)  -> gui\ComplaintForm.java : submitComplaint()  (newline and pipe removed)
+    String.format()      -> gui\StatisticsFrame.java : buildStatistics(); gui\WardenDashboard.java : showStudentList()
+
+StringBuffer
+    complaint slip       -> model\Complaint.java : generateSlip()
+    export report        -> gui\WardenDashboard.java : exportReport()
+    statistics text      -> gui\StatisticsFrame.java : buildStatistics()
+    mobile masking       -> model\Student.java : getMaskedMobile()  replace(5, 8, "XXX") gives 90000XXX01
+    room information     -> gui\RoomMapFrame.java : showRoomInfo()
+
+Multithreading (extends Thread, run(), start(), sleep(), setName(), setDaemon())
+    EscalationThread -> threads\EscalationThread.java : run()
+        sleeps 15 seconds, calls HostelData.escalateOldComplaints(), prints
+        "[EscalationThread] Complaint 1003 escalated", saves, refreshes the open
+        WardenDashboard through SwingUtilities.invokeLater (anonymous Runnable)
+    ClockThread      -> threads\ClockThread.java : run()  (updates the status bar every second, stopClock())
+    LockoutThread    -> threads\LockoutThread.java : run()  (30 second countdown, then re-enables Login)
+        started from gui\LoginFrame.java : wrongLogin() after 3 wrong attempts
+    InterruptedException caught around every sleep()
+
+synchronized
+    -> model\Complaint.java : updateStatus(), escalate(), getStatus()
+    -> data\HostelData.java : search methods, checkDuplicate(), addComplaint(), escalateOldComplaints(), save()
+    -> data\FileHandler.java : saveComplaints()
+    -> threads\EscalationThread.java : setOpenDashboard(), getOpenDashboard()  (static synchronized)
+
+
+UNIT IV: AWT, SWING, UTILITIES
+==============================
+
+AWT Frame, Label, TextField, Button, CheckboxGroup
+    -> gui\LoginFrame.java : constructor
+       setEchoChar('*') on the password TextField
+       CheckboxGroup with Student and Warden radio checkboxes
+       Login and Clear Buttons
+
+Event handling with ActionListener and e.getSource()
+    -> gui\LoginFrame.java : actionPerformed()
+    -> every GUI class implements ActionListener
+
+WindowAdapter (anonymous inner class)
+    -> gui\LoginFrame.java, gui\RoomMapFrame.java, gui\StudentDashboard.java, gui\WardenDashboard.java
+
+AWT MenuBar, Menu, MenuItem
+    -> gui\RoomMapFrame.java : constructor  (Floor: Ground, First, Second; Window: Close)
+
+AWT Panel with GridLayout of Buttons, setBackground for meaning
+    -> gui\RoomMapFrame.java : showFloor()
+       green vacant, light grey occupied, red open complaint
+    Clicking a room -> gui\RoomMapFrame.java : showRoomInfo()  (occupants and open complaints in a Label)
+
+Layouts: BorderLayout, GridLayout, FlowLayout only
+    -> every GUI class
+
+Swing JFrame, JMenuBar, JMenu, JMenuItem
+    -> gui\StudentDashboard.java : File (Logout, Exit), Complaint (New Complaint, My Complaints), Help (About)
+    -> gui\WardenDashboard.java : File, Complaints, Hostel, Reports, Help
+
+JTable with DefaultTableModel (anonymous subclass, cells not editable)
+    -> gui\StudentDashboard.java : refreshTable()
+    -> gui\WardenDashboard.java : refreshTable()
+
+Swing form controls
+    -> gui\ComplaintForm.java : constructor
+       JTextField (Roll No. and Hostel not editable, Room No. prefilled)
+       JComboBox<String> for category
+       JRadioButton x 3 in a ButtonGroup for priority
+       JCheckBox "Submit anonymously" and "Allow entry to room when I am absent"
+       JTextArea in JScrollPane for the description
+       JButton Submit and Reset
+
+JOptionPane
+    showMessageDialog -> gui\ComplaintForm.java : showSlip(), showError()
+    showInputDialog   -> gui\WardenDashboard.java : changeStatus(), searchById(), searchByRoll()
+
+JDialog (modal)
+    -> gui\ComplaintForm.java, gui\AboutDialog.java
+
+Anonymous complaints
+    -> gui\WardenDashboard.java : shownRoll(), shownName()  ("Anonymous" in place of name and roll)
+    -> gui\WardenDashboard.java : refreshTable()  (roll search never shows anonymous complaints)
+
+Collections
+    ArrayList<Complaint>        -> data\HostelData.java : complaints
+    HashMap<String, Student>    -> data\HostelData.java : students (key is Roll No.)
+    Collections.sort + Comparator as an anonymous class
+                                -> data\HostelData.java : sortComplaints()  (High priority first, then oldest date)
+                                -> data\HostelData.java : getStudentsOfHostel()  (by Room No.)
+
+Date and time API (java.time)
+    LocalDate                   -> model\Complaint.java : filedDate, resolvedDate
+    LocalDateTime               -> Main.java : printBanner(); threads\ClockThread.java : run()
+    DateTimeFormatter "dd-MM-yyyy" -> model\Complaint.java : DATE_FORMAT
+    ChronoUnit.DAYS.between     -> model\Complaint.java : getDaysOpen(), getDaysToResolve()
+
+File handling
+    data\complaints.txt (pipe separated, saved after every change and on exit)
+        -> data\FileHandler.java : saveComplaints(), loadComplaints()
+    data\report_<hostelcode>_<date>.txt
+        -> data\FileHandler.java : writeReport()
+    File.mkdirs() creates the data folder on the first run
+
+
+SECURITY POINTS FOR THE VIVA (Cyber Security)
+=============================================
+    Brute force protection      -> LockoutThread, 3 attempts then 30 second lock
+    Password hidden on screen   -> setEchoChar('*')
+    Input validation            -> Roll No., Room No., description checked before saving
+    Least privilege             -> each Warden sees only their own hostel; canManage() check
+    Privacy                     -> anonymous complaints hide name and roll, roll search skips them
+    Data minimisation           -> mobile numbers masked in the Warden's student list
+    File injection guard        -> "|" and newlines removed from text before saving

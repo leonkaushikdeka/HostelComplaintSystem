@@ -1,0 +1,114 @@
+HOSTEL COMPLAINT MANAGEMENT SYSTEM
+5 MINUTE DEMO ORDER
+
+BEFORE THE VIVA
+    1. Run compile.bat once. It should say "Compilation successful."
+    2. Delete data\complaints.txt so the 10 sample complaints load fresh with dates
+       counted back from today. (If the file is missing the program creates it.)
+    3. Keep the Command Prompt window visible next to the program. The console
+       output is part of the demo.
+    4. The escalation check runs 15 seconds after start. Log in as the Warden quickly
+       (step 0:10) to watch it change the table live.
+
+LOGINS
+    Warden  : BHA / warden@123   (also BHB, GH)
+    Student : IT25B9001 / asu@9001   (password is asu@ + last 4 digits of the roll)
+
+
+0:00  START
+      Double click run.bat.
+      Show the banner: Java version, vendor, OS name and architecture, user name,
+      date and time, 20 students, 10 complaints, next complaint ID 1011.
+      Point out "[EscalationThread] Started. Checking every 15 seconds."
+
+0:10  WARDEN LOGIN (AWT)
+      Select Warden. Type bha (lower case works, equalsIgnoreCase). Password warden@123.
+      Show the Warden panel: Name, Email, Mobile come from Person, Staff ID and
+      Designation from Staff, Hostel from Warden. Three levels of showDetails().
+      Table: only Boys Hostel A complaints, High priority first, then oldest.
+      1003 shows Anonymous in place of name and roll.
+      1001 and 1003 are Pending for 6 and 5 days.
+
+0:25  ESCALATION THREAD FIRES
+      The console prints:
+          [EscalationThread] Complaint 1001 escalated
+          [EscalationThread] Complaint 1003 escalated
+          [EscalationThread] Complaint 1008 escalated
+      The table refreshes by itself: Escalated, priority High,
+      remark "Auto escalated after 3 days". 1004 (2 days old) stays Pending.
+      Explain: extends Thread, sleep(15000) inside try-catch, setDaemon(true),
+      synchronized escalate() and updateStatus().
+
+0:45  UPDATE STATUS
+      Select 1001, click Mark In Progress, remark "Plumber called".
+      Select 1004, click Mark Resolved, remark "Regulator replaced".
+      Only a Warden object passes the instanceof Warden check in updateStatus().
+
+1:05  SEARCH
+      Complaints > Search by ID, type abc: NumberFormatException is caught.
+      Complaints > Search by ID, type 1003: one row.
+      Complaints > Search by Roll No., type IT25B9005: no rows, because his only
+      complaint is anonymous and roll search never reveals it.
+      Complaints > All.
+
+1:35  ROOM MAP (AWT)
+      Hostel > Room Map. Green vacant, grey occupied, red open complaint.
+      Click 018: occupant Rohan Sharma and complaint 1001.
+      Floor > First, click 112: two occupants and complaint 1003.
+      Window > Close.
+
+2:00  STUDENT LIST
+      Hostel > Student List. Mobile numbers masked with StringBuffer.replace(),
+      for example 90000XXX01.
+
+2:10  STATISTICS
+      Reports > Statistics. Totals with loops, switch on status, (double) cast for
+      the resolution rate, (int) narrowing for the rounded rate, average days,
+      most reported category, ternary label, 2D category x status array.
+
+2:30  EXPORT REPORT
+      Reports > Export Report. Open data\report_BHA_<date>.txt in Notepad.
+      Help > About shows both developers and the system properties.
+      File > Logout.
+
+2:50  BRUTE FORCE LOCKOUT
+      Student selected. Type IT25X9001 with any password:
+          "Roll No. must start with IT25B. Attempts left: 2"
+          (InvalidRollNumberException, checked with startsWith, substring,
+           charAt, Character.isDigit, no regex)
+      Type IT25B9001 with a wrong password twice.
+      The Login button greys out and the label counts down from 30 seconds.
+      While it counts down, open data\complaints.txt and show the pipe separated
+      lines, then explain FileNotFoundException on the first run and the finally
+      block that closes the file.
+
+3:30  STUDENT LOGIN (Swing)
+      IT25B9001 / asu@9001. Profile panel, own complaints only, clock ticking in
+      the status bar (ClockThread).
+
+3:45  DUPLICATE COMPLAINT
+      Complaint > New Complaint. Category Plumbing, description
+      "Tap in the washroom is still leaking badly", Submit.
+          "You already have an open Plumbing complaint (ID 1001, In Progress)."
+      (DuplicateComplaintException)
+
+4:00  VALIDATION
+      Category Electrical, description "light broken", Submit:
+          "Description must have at least 5 words. You wrote 2." (EmptyFieldException)
+      Room No. 305, Submit: room does not exist (InvalidRoomException).
+      Room No. 1a8, Submit: Room No. must be a number (NumberFormatException).
+
+4:20  REGISTER A COMPLAINT
+      Room No. 018, Category Electrical, leave Priority unselected,
+      tick "Allow entry to room when I am absent",
+      description "Tube light in my room flickers and goes off at night".
+      Submit. The slip shows "Complaint registered. ID: 1011" and Priority Medium,
+      which came from the constructor without priority chained with this(...).
+      My Complaints table now has 2 rows.
+
+4:40  SAVE AND RELOAD
+      File > Exit (saves the file). Run run.bat again.
+      Banner now shows 11 complaints and next complaint ID 1012, because the
+      counter is set to the highest ID plus 1 after loading.
+
+5:00  END
